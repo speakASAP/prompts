@@ -28,7 +28,16 @@ app.disable("x-powered-by");
 app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, "..", "public")));
+app.use(
+  express.static(path.join(__dirname, "..", "public"), {
+    setHeaders(res, assetPath) {
+      const base = path.basename(assetPath);
+      if (base === "app.js" || base === "styles.css") {
+        res.setHeader("Cache-Control", "no-cache, must-revalidate");
+      }
+    }
+  })
+);
 
 app.use((req, res, next) => {
   const startedAt = Date.now();
