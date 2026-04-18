@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Prompts Microservice</title>
-    <link rel="stylesheet" href="/styles.css" />
+    <link rel="stylesheet" href="/styles.css?v=2" />
   </head>
   <body>
     <main class="container">
@@ -48,7 +48,12 @@
           <form id="prompt-form" class="form-grid">
             <input type="hidden" name="id" />
             <input type="text" name="title" placeholder="Title" required />
-            <textarea name="content" placeholder="Prompt content" rows="8" required></textarea>
+            <div class="prompt-field-wrap">
+              <button type="button" id="copy-form-prompt" class="copy-prompt-btn" title="Copy prompt content" aria-label="Copy prompt content">
+                Copy
+              </button>
+              <textarea name="content" placeholder="Prompt content" rows="8" required></textarea>
+            </div>
             <input type="text" name="tags" placeholder="Tags (comma separated)" />
             <select name="category" required>
               <option value="prompt">prompt</option>
@@ -86,6 +91,6 @@
       <p id="message" class="message"></p>
     </main>
 
-    <script src="/app.js"></script>
+    <script src="/app.js?v=2"></script>
   </body>
   </html>

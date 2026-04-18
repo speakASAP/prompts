@@ -20,6 +20,24 @@ function showMessage(text, isError = false) {
   messageNode.className = isError ? "message error" : "message";
 }
 
+async function copyTextToClipboard(text, feedbackButton) {
+  try {
+    await navigator.clipboard.writeText(text);
+    showMessage("Copied to clipboard.");
+    if (feedbackButton) {
+      feedbackButton.classList.add("copied");
+      const previous = feedbackButton.textContent;
+      feedbackButton.textContent = "Copied";
+      window.setTimeout(() => {
+        feedbackButton.classList.remove("copied");
+        feedbackButton.textContent = previous;
+      }, 1600);
+    }
+  } catch (_err) {
+    showMessage("Could not copy (clipboard permission denied).", true);
+  }
+}
+
 async function api(path, options = {}) {
   const response = await fetch(path, {
     method: options.method || "GET",
@@ -69,18 +87,47 @@ function resetPromptForm() {
 function renderPromptItem(item) {
   const wrapper = document.createElement("article");
   wrapper.className = "prompt-item";
-  wrapper.innerHTML = `
-    <div class="row row-space">
-      <h3>${item.title}</h3>
-      <span class="badge">${item.category}</span>
-    </div>
-    <pre>${item.content}</pre>
-    <p class="tags">${(item.tags || []).map((tag) => `#${tag}`).join(" ")}</p>
-    <div class="row">
-      <button data-action="edit" data-id="${item.id}">Edit</button>
-      <button data-action="delete" data-id="${item.id}" class="danger">Delete</button>
-    </div>
+
+  const headerRow = document.createElement("div");
+  headerRow.className = "row row-space";
+  const titleEl = document.createElement("h3");
+  titleEl.textContent = item.title;
+  const badge = document.createElement("span");
+  badge.className = "badge";
+  badge.textContent = item.category;
+  headerRow.append(titleEl, badge);
+
+  const block = document.createElement("div");
+  block.className = "prompt-block";
+
+  const copyBtn = document.createElement("button");
+  copyBtn.type = "button";
+  copyBtn.className = "copy-prompt-btn";
+  copyBtn.textContent = "Copy";
+  copyBtn.title = "Copy prompt to clipboard";
+  copyBtn.setAttribute("aria-label", "Copy prompt to clipboard");
+
+  const pre = document.createElement("pre");
+  pre.textContent = item.content;
+
+  copyBtn.addEventListener("click", () => {
+    void copyTextToClipboard(item.content ?? "", copyBtn);
+  });
+
+  block.append(copyBtn, pre);
+
+  const tagsEl = document.createElement("p");
+  tagsEl.className = "tags";
+  tagsEl.textContent = (item.tags || []).map((tag) => `#${tag}`).join(" ");
+
+  const actions = document.createElement("div");
+  actions.className = "row";
+  actions.innerHTML = `
+    <button type="button" data-action="edit" data-id="${item.id}">Edit</button>
+    <button type="button" data-action="delete" data-id="${item.id}" class="danger">Delete</button>
   `;
+
+  wrapper.append(headerRow, block, tagsEl, actions);
   return wrapper;
 }
 
@@ -150,6 +197,14 @@ logoutButton.addEventListener("click", async () => {
 cancelEditButton.addEventListener("click", () => {
   resetPromptForm();
 });
+
+const copyFormPromptBtn = document.getElementById("copy-form-prompt");
+if (copyFormPromptBtn) {
+  copyFormPromptBtn.addEventListener("click", () => {
+    const text = String(promptForm.elements.content?.value || "");
+    void copyTextToClipboard(text, copyFormPromptBtn);
+  });
+}
 
 promptForm.addEventListener("submit", async (event) => {
   event.preventDefault();
