@@ -1,0 +1,30 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: prompts-microservice
+  namespace: statex-apps
+  labels:
+    app: prompts-microservice
+    managed-by: k8s-migration
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-body-size: "100m"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - prompts.alfares.cz
+      secretName: prompts-microservice-tls
+  rules:
+    - host: prompts.alfares.cz
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: prompts-microservice
+                port:
+                  number: 4750

@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Prompts Microservice</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="container">
+      <header class="header">
+        <h1>Prompt Library</h1>
+        <p>Store and share reusable prompts across machines and environments.</p>
+      </header>
+
+      <section id="auth-section" class="card">
+        <div class="row">
+          <h2>Login</h2>
+        </div>
+        <form id="login-form" class="form-grid">
+          <input type="email" name="email" placeholder="Email" required />
+          <input type="password" name="password" placeholder="Password" required />
+          <button type="submit">Login</button>
+        </form>
+
+        <div class="row row-space">
+          <h3>Create account</h3>
+        </div>
+        <form id="register-form" class="form-grid">
+          <input type="email" name="email" placeholder="Email" required />
+          <input type="password" name="password" placeholder="Password" required />
+          <input type="text" name="firstName" placeholder="First name" required />
+          <input type="text" name="lastName" placeholder="Last name" required />
+          <button type="submit">Register</button>
+        </form>
+      </section>
+
+      <section id="app-section" class="hidden">
+        <div class="toolbar">
+          <div>
+            <strong id="user-label"></strong>
+          </div>
+          <button id="logout-button" class="secondary" type="button">Logout</button>
+        </div>
+
+        <section class="card">
+          <h2 id="form-title">Create prompt</h2>
+          <form id="prompt-form" class="form-grid">
+            <input type="hidden" name="id" />
+            <input type="text" name="title" placeholder="Title" required />
+            <textarea name="content" placeholder="Prompt content" rows="8" required></textarea>
+            <input type="text" name="tags" placeholder="Tags (comma separated)" />
+            <select name="category" required>
+              <option value="prompt">prompt</option>
+              <option value="skill">skill</option>
+              <option value="rule">rule</option>
+              <option value="template">template</option>
+              <option value="other">other</option>
+            </select>
+            <div class="row">
+              <button type="submit">Save</button>
+              <button id="cancel-edit" class="secondary" type="button">Cancel edit</button>
+            </div>
+          </form>
+        </section>
+
+        <section class="card">
+          <div class="row row-space">
+            <h2>Stored prompts</h2>
+            <div class="filters">
+              <input id="search-input" type="text" placeholder="Search title or content" />
+              <select id="category-filter">
+                <option value="">all categories</option>
+                <option value="prompt">prompt</option>
+                <option value="skill">skill</option>
+                <option value="rule">rule</option>
+                <option value="template">template</option>
+                <option value="other">other</option>
+              </select>
+            </div>
+          </div>
+          <div id="prompt-list" class="list"></div>
+        </section>
+      </section>
+
+      <p id="message" class="message"></p>
+    </main>
+
+    <script src="/app.js"></script>
+  </body>
+  </html>
