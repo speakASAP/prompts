@@ -1,22 +1,32 @@
-# SYSTEM.md
+# System: prompts-microservice
 
 ## Service identity
 
 - Service name: `prompts-microservice`
 - Domain: `prompts.alfares.cz`
 - Runtime: Node.js (Express)
+- Port: `4750`
 
-## Ports
+## Deployment
 
-- Blue host port: `4750` (`PORT`)
-- Green host port: `4751` (`PORT_GREEN`)
-- Container port: `3000` (`CONTAINER_PORT`)
+**Platform:** Kubernetes (k3s) · namespace `statex-apps`  
+**Image:** `localhost:5000/prompts-microservice:latest`  
+**Deploy:** `./scripts/deploy.sh`  
+**Logs:** `kubectl logs -n statex-apps -l app=prompts-microservice -f`  
+**Restart:** `kubectl rollout restart deployment/prompts-microservice -n statex-apps`
 
 ## Dependencies
 
-- `auth-microservice` (`AUTH_SERVICE_URL`) for login/register/token validation
-- `database-server` PostgreSQL (`DB_*`) for prompt persistence
-- `logging-microservice` (`LOGGING_SERVICE_URL`) for operational logs
+| Service | Usage |
+|---------|-------|
+| auth-microservice (`AUTH_SERVICE_URL`) | Login/register/token validation |
+| database-server (`DB_*`) | PostgreSQL — prompt persistence |
+| logging-microservice (`LOGGING_SERVICE_URL`) | Operational logs |
+
+## Secrets
+
+All secrets in Vault at `secret/prod/prompts-microservice`.  
+Synced via ESO → K8s Secret `prompts-microservice-secret`.
 
 ## Endpoints
 
@@ -34,10 +44,6 @@
   - `PUT /api/prompts/:id`
   - `DELETE /api/prompts/:id`
 
-## Deployment
-
-- Blue/green deployment script: `scripts/deploy.sh`
-- Compose manifests:
-  - `docker-compose.blue.yml`
-  - `docker-compose.green.yml`
-- Nginx route source: `nginx/nginx-api-routes.conf`
+## Current State
+<!-- AI-maintained -->
+Stage: production · Deploy: Kubernetes (`statex-apps`)
