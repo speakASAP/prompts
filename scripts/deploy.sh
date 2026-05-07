@@ -9,8 +9,10 @@ GREEN='\033[0;32m'; YELLOW='\033[1;33m'; RED='\033[0;31m'; BLUE='\033[0;34m'; NC
 SERVICE_NAME="prompts-microservice"
 REGISTRY="localhost:5000"
 NAMESPACE="statex-apps"
-IMAGE_TAG="${1:-latest}"
+DEFAULT_TAG="$(cd \"$PROJECT_ROOT\" && git rev-parse --short HEAD 2>/dev/null || echo \"build-$(date -u +%Y%m%d%H%M%S)\")"
+IMAGE_TAG="${1:-$DEFAULT_TAG}"
 IMAGE="${REGISTRY}/${SERVICE_NAME}:${IMAGE_TAG}"
+IMAGE_LATEST="${REGISTRY}/${SERVICE_NAME}:latest"
 
 echo -e "${BLUE}"
 echo "╔════════════════════════════════════════════════════════╗"
@@ -19,11 +21,12 @@ echo "╚═══════════════════════�
 echo -e "${NC}"
 
 echo -e "${YELLOW}[1/5] Building image: ${IMAGE}...${NC}"
-docker build -t "$IMAGE" "$PROJECT_ROOT"
+docker build -t "$IMAGE" -t "$IMAGE_LATEST" "$PROJECT_ROOT"
 echo -e "${GREEN}✅ Image built${NC}"
 
 echo -e "${YELLOW}[2/5] Pushing to registry...${NC}"
 docker push "$IMAGE"
+docker push "$IMAGE_LATEST"
 echo -e "${GREEN}✅ Image pushed: ${IMAGE}${NC}"
 
 echo -e "${YELLOW}[3/5] Updating K8s deployment...${NC}"
