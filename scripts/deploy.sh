@@ -31,7 +31,7 @@ echo -e "${GREEN}✅ Image pushed: ${IMAGE}${NC}"
 
 echo -e "${YELLOW}[3/5] Updating K8s deployment...${NC}"
 kubectl set image deployment/${SERVICE_NAME} \
-  app="${IMAGE}" \
+  app="${IMAGE_LATEST}" \
   -n "${NAMESPACE}"
 echo -e "${GREEN}✅ Deployment updated${NC}"
 
