@@ -24,7 +24,7 @@ spec:
       containers:
         - name: app
           image: localhost:5000/prompts-microservice:latest
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           ports:
             - containerPort: 4750
               name: http
