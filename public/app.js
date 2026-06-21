@@ -84,6 +84,20 @@ function resetPromptForm() {
   formTitle.textContent = "Create prompt";
 }
 
+function buildDuplicateTitle(title) {
+  const base = String(title || "Untitled prompt").trim() || "Untitled prompt";
+  return `Copy of ${base}`;
+}
+
+function buildDuplicatePayload(item) {
+  return {
+    title: buildDuplicateTitle(item.title),
+    content: item.content || "",
+    tags: Array.isArray(item.tags) ? item.tags.join(", ") : "",
+    category: item.category || "prompt"
+  };
+}
+
 function renderPromptItem(item) {
   const wrapper = document.createElement("article");
   wrapper.className = "prompt-item";
@@ -123,6 +137,7 @@ function renderPromptItem(item) {
   const actions = document.createElement("div");
   actions.className = "row";
   actions.innerHTML = `
+    <button type="button" data-action="duplicate" data-id="${item.id}">Duplicate</button>
     <button type="button" data-action="edit" data-id="${item.id}">Edit</button>
     <button type="button" data-action="delete" data-id="${item.id}" class="danger">Delete</button>
   `;
@@ -247,6 +262,23 @@ promptList.addEventListener("click", async (event) => {
     try {
       await api(`/api/prompts/${id}`, { method: "DELETE" });
       showMessage("Prompt deleted.");
+      await loadPrompts();
+    } catch (error) {
+      showMessage(error.message, true);
+    }
+    return;
+  }
+
+  if (action === "duplicate") {
+    const sourceNode = target.closest(".prompt-item");
+    const sourceTitle = sourceNode?.querySelector("h3")?.textContent || "prompt";
+    try {
+      const prompt = await api(`/api/prompts/${id}`);
+      await api("/api/prompts", {
+        method: "POST",
+        body: buildDuplicatePayload(prompt)
+      });
+      showMessage(`Duplicated "${sourceTitle}".`);
       await loadPrompts();
     } catch (error) {
       showMessage(error.message, true);
