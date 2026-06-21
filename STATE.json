@@ -1,11 +1,29 @@
 {
+  "v": 1,
   "project": "prompts-microservice",
-  "stage": "implementation",
-  "health": "yellow",
-  "last_updated_at": "2026-04-18T00:00:00.000Z",
-  "notes": [
-    "Initial scaffold created",
-    "Auth and prompt CRUD implemented",
-    "Deployment validation pending"
-  ]
+  "stage": "production",
+  "health": "ok",
+  "cycle": 1,
+  "last_cycle_at": "2026-06-21T09:00:00Z",
+  "tasks_active": 0,
+  "tasks_failed_last_cycle": 0,
+  "open_task_ids": [],
+  "last_milestone": "prompt-service-health-contract-and-state-restored",
+  "next_focus": "Deployment validation is complete and repo-owned task/state docs are restored. Future work requires a new bounded owner-approved enhancement goal from the backlog.",
+  "blockers": [],
+  "budget_units_used": 0,
+  "metrics": {
+    "custom": {
+      "ui_domain": "https://prompts.alfares.cz/",
+      "api_health": "https_200_ok_2026_06_21",
+      "root_ui": "https_200_ok_2026_06_21",
+      "k8s_deployment": "available_1_of_1_2026_06_21",
+      "validation": "npm_run_check_passed",
+      "auth_scope": "owner_only_prompt_crud",
+      "deploy_script": "scripts/deploy.sh",
+      "backlog_status": "no_active_bounded_lane"
+    }
+  },
+  "updated_at": "2026-06-21",
+  "project_status": "active_ready_for_future_goal"
 }

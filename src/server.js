@@ -96,7 +96,7 @@ function normalizePromptInput(body = {}) {
   return { title, content, category, tags };
 }
 
-app.get("/api/health", async (_req, res) => {
+async function handleHealth(_req, res) {
   try {
     await dbPool.query("SELECT 1");
     return res.json({
@@ -115,7 +115,10 @@ app.get("/api/health", async (_req, res) => {
       message: "Database unavailable"
     });
   }
-});
+}
+
+app.get("/health", handleHealth);
+app.get("/api/health", handleHealth);
 
 app.post("/api/auth/login", async (req, res) => {
   const started = Date.now();
