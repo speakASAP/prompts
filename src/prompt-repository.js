@@ -52,13 +52,26 @@ function createPromptRepository(pool) {
       where.push(`(title ILIKE $${values.length} OR content ILIKE $${values.length})`);
     }
 
+    const limit = Math.min(Math.max(Number.parseInt(String(filters.limit || 10), 10) || 10, 1), 50);
+    const offset = Math.max(Number.parseInt(String(filters.offset || 0), 10) || 0, 0);
+    const whereClause = where.join(" AND ");
+    const countResult = await pool.query(
+      `SELECT COUNT(*)::int AS total FROM prompts WHERE ${whereClause}`,
+      values
+    );
+    const queryValues = [...values, limit, offset];
     const query = `
       SELECT * FROM prompts
-      WHERE ${where.join(" AND ")}
-      ORDER BY updated_at DESC
+      WHERE ${whereClause}
+      ORDER BY updated_at DESC, id DESC
+      LIMIT $${queryValues.length - 1}
+      OFFSET $${queryValues.length}
     `;
-    const result = await pool.query(query, values);
-    return result.rows.map(normalizeRow);
+    const result = await pool.query(query, queryValues);
+    return {
+      items: result.rows.map(normalizeRow),
+      total: Number(countResult.rows[0]?.total || 0)
+    };
   }
 
   async function findById(id, ownerId) {

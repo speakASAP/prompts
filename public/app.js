@@ -10,6 +10,12 @@ const promptList = document.getElementById("prompt-list");
 
 const searchInput = document.getElementById("search-input");
 const categoryFilter = document.getElementById("category-filter");
+const paginationStatus = document.getElementById("pagination-status");
+const previousPageButton = document.getElementById("previous-page");
+const nextPageButton = document.getElementById("next-page");
+
+let promptPage = 1;
+const promptPageSize = 10;
 
 const logoutButton = document.getElementById("logout-button");
 const cancelEditButton = document.getElementById("cancel-edit");
@@ -98,6 +104,21 @@ function buildDuplicatePayload(item) {
   };
 }
 
+function updatePaginationControls(pagination) {
+  if (!pagination || !paginationStatus || !previousPageButton || !nextPageButton) {
+    return;
+  }
+
+  promptPage = pagination.page;
+  paginationStatus.textContent = `Page ${pagination.page} of ${pagination.totalPages} - ${pagination.total} prompts`;
+  previousPageButton.disabled = !pagination.hasPreviousPage;
+  nextPageButton.disabled = !pagination.hasNextPage;
+}
+
+function resetPromptPage() {
+  promptPage = 1;
+}
+
 function renderPromptItem(item) {
   const wrapper = document.createElement("article");
   wrapper.className = "prompt-item";
@@ -150,11 +171,14 @@ async function loadPrompts() {
   const search = searchInput.value.trim();
   const category = categoryFilter.value.trim();
   const params = new URLSearchParams();
+  params.set("page", String(promptPage));
+  params.set("limit", String(promptPageSize));
   if (search) params.set("search", search);
   if (category) params.set("category", category);
 
   const payload = await api(`/api/prompts?${params.toString()}`);
   promptList.innerHTML = "";
+  updatePaginationControls(payload.pagination);
   if (!payload.items.length) {
     promptList.innerHTML = `<p>No prompts found.</p>`;
     return;
@@ -240,6 +264,7 @@ promptForm.addEventListener("submit", async (event) => {
       showMessage("Prompt created.");
     }
     resetPromptForm();
+    resetPromptPage();
     await loadPrompts();
   } catch (error) {
     showMessage(error.message, true);
@@ -279,6 +304,7 @@ promptList.addEventListener("click", async (event) => {
         body: buildDuplicatePayload(prompt)
       });
       showMessage(`Duplicated "${sourceTitle}".`);
+      resetPromptPage();
       await loadPrompts();
     } catch (error) {
       showMessage(error.message, true);
@@ -303,10 +329,22 @@ promptList.addEventListener("click", async (event) => {
 });
 
 searchInput.addEventListener("input", () => {
+  resetPromptPage();
   void loadPrompts();
 });
 
 categoryFilter.addEventListener("change", () => {
+  resetPromptPage();
+  void loadPrompts();
+});
+
+previousPageButton?.addEventListener("click", () => {
+  promptPage = Math.max(promptPage - 1, 1);
+  void loadPrompts();
+});
+
+nextPageButton?.addEventListener("click", () => {
+  promptPage += 1;
   void loadPrompts();
 });
 

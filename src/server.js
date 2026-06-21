@@ -96,6 +96,18 @@ function normalizePromptInput(body = {}) {
   return { title, content, category, tags };
 }
 
+function parsePositiveInteger(value, fallback) {
+  const parsed = Number.parseInt(String(value || ""), 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+function normalizePromptPagination(query = {}) {
+  const page = parsePositiveInteger(query.page, 1);
+  const requestedLimit = parsePositiveInteger(query.limit, 10);
+  const limit = Math.min(Math.max(requestedLimit, 1), 50);
+  return { page, limit, offset: (page - 1) * limit };
+}
+
 async function handleHealth(_req, res) {
   try {
     await dbPool.query("SELECT 1");
@@ -188,11 +200,25 @@ app.get("/api/auth/me", authGuard, (req, res) => {
 app.get("/api/prompts", authGuard, async (req, res) => {
   const started = Date.now();
   try {
-    const prompts = await promptRepository.listByOwner(req.user.id, {
+    const pagination = normalizePromptPagination(req.query);
+    const result = await promptRepository.listByOwner(req.user.id, {
       category: req.query.category || "",
-      search: req.query.search || ""
+      search: req.query.search || "",
+      limit: pagination.limit,
+      offset: pagination.offset
     });
-    return res.json({ items: prompts });
+    const totalPages = Math.max(Math.ceil(result.total / pagination.limit), 1);
+    return res.json({
+      items: result.items,
+      pagination: {
+        page: pagination.page,
+        limit: pagination.limit,
+        total: result.total,
+        totalPages,
+        hasPreviousPage: pagination.page > 1,
+        hasNextPage: pagination.page < totalPages
+      }
+    });
   } catch (error) {
     logger.log("error", "list_prompts_failed", {
       timestamp: new Date().toISOString(),
