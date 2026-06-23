@@ -40,7 +40,12 @@
           <div>
             <strong id="user-label"></strong>
           </div>
-          <button id="logout-button" class="secondary" type="button">Logout</button>
+          <div class="row">
+            <button id="export-prompts" class="secondary" type="button">Export JSON</button>
+            <button id="import-prompts" class="secondary" type="button">Import JSON</button>
+            <input id="import-prompts-file" type="file" accept="application/json" hidden />
+            <button id="logout-button" class="secondary" type="button">Logout</button>
+          </div>
         </div>
 
         <section class="card">
@@ -96,6 +101,6 @@
       <p id="message" class="message"></p>
     </main>
 
-    <script src="/app.js?v=2"></script>
+    <script src="/app.js?v=3"></script>
   </body>
-  </html>
+</html>

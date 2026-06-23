@@ -96,6 +96,26 @@ function normalizePromptInput(body = {}) {
   return { title, content, category, tags };
 }
 
+function normalizeImportPayload(body = {}) {
+  const promptsRaw = Array.isArray(body) ? body : body.prompts;
+  if (!Array.isArray(promptsRaw)) {
+    return { prompts: [], skippedCount: 0 };
+  }
+
+  let skippedCount = 0;
+  const prompts = promptsRaw
+    .map((item) => normalizePromptInput(item))
+    .filter((item) => {
+      const isValid = Boolean(item.title && item.content);
+      if (!isValid) {
+        skippedCount += 1;
+      }
+      return isValid;
+    });
+
+  return { prompts, skippedCount };
+}
+
 function parsePositiveInteger(value, fallback) {
   const parsed = Number.parseInt(String(value || ""), 10);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
@@ -226,6 +246,58 @@ app.get("/api/prompts", authGuard, async (req, res) => {
       error: error.message
     });
     return res.status(500).json({ message: "Failed to load prompts" });
+  }
+});
+
+app.get("/api/prompts/export", authGuard, async (req, res) => {
+  const started = Date.now();
+  try {
+    const prompts = await promptRepository.listAllByOwner(req.user.id);
+    const payload = {
+      exportedAt: new Date().toISOString(),
+      total: prompts.length,
+      prompts: prompts.map((prompt) => ({
+        title: prompt.title,
+        content: prompt.content,
+        category: prompt.category,
+        tags: prompt.tags || []
+      }))
+    };
+    res.setHeader("Content-Type", "application/json; charset=utf-8");
+    return res.json(payload);
+  } catch (error) {
+    logger.log("error", "export_prompts_failed", {
+      timestamp: new Date().toISOString(),
+      duration_ms: Date.now() - started,
+      error: error.message
+    });
+    return res.status(500).json({ message: "Failed to export prompts" });
+  }
+});
+
+app.post("/api/prompts/import", authGuard, async (req, res) => {
+  const started = Date.now();
+  try {
+    const { prompts, skippedCount } = normalizeImportPayload(req.body);
+    if (!prompts.length) {
+      return res.status(400).json({ message: "Import payload does not contain valid prompts" });
+    }
+    if (prompts.length > 200) {
+      return res.status(400).json({ message: "Import payload is too large (max 200 prompts)" });
+    }
+
+    const importedCount = await promptRepository.importMany(req.user.id, prompts);
+    return res.status(201).json({
+      importedCount,
+      skippedCount
+    });
+  } catch (error) {
+    logger.log("error", "import_prompts_failed", {
+      timestamp: new Date().toISOString(),
+      duration_ms: Date.now() - started,
+      error: error.message
+    });
+    return res.status(500).json({ message: "Failed to import prompts" });
   }
 });
 

@@ -5,14 +5,15 @@
 - [ ] Add auth role policy if prompt sharing scope expands beyond owner-only.
 - [x] Add pagination for large prompt libraries.
 - [ ] Add audit fields for last editor and source machine.
-- [ ] Add optional export/import endpoint for backup.
+- [x] Add optional export/import endpoint for backup.
 - [ ] Add seed categories management page.
 - [ ] Add rate limiting for auth and write endpoints.
 
 ## Active
-- None. Prompt duplication and bounded pagination are implemented; no additional bounded implementation lane is active in repo state.
+- None. Prompt duplication, pagination, and owner-only export/import are implemented; no additional bounded implementation lane is active in repo state.
 
 ## Completed
+- [x] 2026-06-22 Added owner-only prompt export/import for JSON backup and restore.
 - [x] 2026-06-21 Added capped owner-only prompt pagination with page controls.
 - [x] 2026-06-21 Added prompt duplication action in UI with live create-and-refresh behavior.
 - [x] 2026-06-21 Restored repo-owned `STATE.json` and `TASKS.md` so orchestration can read current runtime state again.

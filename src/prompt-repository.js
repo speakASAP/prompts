@@ -74,6 +74,16 @@ function createPromptRepository(pool) {
     };
   }
 
+  async function listAllByOwner(ownerId) {
+    const result = await pool.query(
+      `SELECT * FROM prompts
+       WHERE owner_id = $1
+       ORDER BY updated_at DESC, id DESC`,
+      [ownerId]
+    );
+    return result.rows.map(normalizeRow);
+  }
+
   async function findById(id, ownerId) {
     const result = await pool.query(
       "SELECT * FROM prompts WHERE id = $1 AND owner_id = $2",
@@ -90,6 +100,27 @@ function createPromptRepository(pool) {
       [ownerId, payload.title, payload.content, payload.category, payload.tags]
     );
     return normalizeRow(result.rows[0]);
+  }
+
+  async function importMany(ownerId, prompts) {
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+      for (const prompt of prompts) {
+        await client.query(
+          `INSERT INTO prompts (owner_id, title, content, category, tags)
+           VALUES ($1, $2, $3, $4, $5)`,
+          [ownerId, prompt.title, prompt.content, prompt.category, prompt.tags]
+        );
+      }
+      await client.query("COMMIT");
+      return prompts.length;
+    } catch (error) {
+      await client.query("ROLLBACK");
+      throw error;
+    } finally {
+      client.release();
+    }
   }
 
   async function update(id, ownerId, payload) {
@@ -118,8 +149,10 @@ function createPromptRepository(pool) {
   return {
     ensureSchema,
     listByOwner,
+    listAllByOwner,
     findById,
     create,
+    importMany,
     update,
     remove
   };

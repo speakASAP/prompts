@@ -13,6 +13,9 @@ const categoryFilter = document.getElementById("category-filter");
 const paginationStatus = document.getElementById("pagination-status");
 const previousPageButton = document.getElementById("previous-page");
 const nextPageButton = document.getElementById("next-page");
+const exportPromptsButton = document.getElementById("export-prompts");
+const importPromptsButton = document.getElementById("import-prompts");
+const importPromptsFileInput = document.getElementById("import-prompts-file");
 
 let promptPage = 1;
 const promptPageSize = 10;
@@ -199,6 +202,31 @@ async function ensureSession() {
   }
 }
 
+function downloadJson(filename, payload) {
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {
+    type: "application/json"
+  });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = filename;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(url);
+}
+
+function parseImportPayload(text) {
+  const parsed = JSON.parse(text);
+  if (Array.isArray(parsed)) {
+    return { prompts: parsed };
+  }
+  if (parsed && Array.isArray(parsed.prompts)) {
+    return parsed;
+  }
+  throw new Error("Import file must contain a prompts array.");
+}
+
 loginForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   try {
@@ -235,6 +263,47 @@ logoutButton.addEventListener("click", async () => {
 
 cancelEditButton.addEventListener("click", () => {
   resetPromptForm();
+});
+
+exportPromptsButton?.addEventListener("click", async () => {
+  try {
+    const payload = await api("/api/prompts/export");
+    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+    downloadJson(`prompts-backup-${timestamp}.json`, payload);
+    showMessage(`Exported ${payload.prompts?.length || 0} prompts.`);
+  } catch (error) {
+    showMessage(error.message, true);
+  }
+});
+
+importPromptsButton?.addEventListener("click", () => {
+  importPromptsFileInput?.click();
+});
+
+importPromptsFileInput?.addEventListener("change", async (event) => {
+  const input = event.target;
+  const file = input?.files?.[0];
+  if (!file) {
+    return;
+  }
+
+  try {
+    const text = await file.text();
+    const payload = parseImportPayload(text);
+    const result = await api("/api/prompts/import", {
+      method: "POST",
+      body: payload
+    });
+    resetPromptPage();
+    await loadPrompts();
+    showMessage(
+      `Imported ${result.importedCount} prompts${result.skippedCount ? `, skipped ${result.skippedCount}` : ""}.`
+    );
+  } catch (error) {
+    showMessage(error.message, true);
+  } finally {
+    input.value = "";
+  }
 });
 
 const copyFormPromptBtn = document.getElementById("copy-form-prompt");
