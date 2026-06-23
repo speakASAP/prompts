@@ -48,9 +48,15 @@ async function copyTextToClipboard(text, feedbackButton) {
 }
 
 async function api(path, options = {}) {
+  const sourceMachineParts = [navigator.platform || "", navigator.userAgent || ""]
+    .map((value) => String(value).trim())
+    .filter(Boolean);
   const response = await fetch(path, {
     method: options.method || "GET",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "X-Source-Machine": sourceMachineParts.join(" | ").slice(0, 240)
+    },
     body: options.body ? JSON.stringify(options.body) : undefined
   });
   if (!response.ok) {
@@ -158,6 +164,13 @@ function renderPromptItem(item) {
   tagsEl.className = "tags";
   tagsEl.textContent = (item.tags || []).map((tag) => `#${tag}`).join(" ");
 
+  const auditEl = document.createElement("p");
+  auditEl.className = "audit-meta";
+  const editor = item.lastEditor || "unknown editor";
+  const sourceMachine = item.sourceMachine || "unknown machine";
+  const updatedAt = item.updatedAt ? new Date(item.updatedAt).toLocaleString() : "unknown time";
+  auditEl.textContent = `Last edited by ${editor} from ${sourceMachine} on ${updatedAt}`;
+
   const actions = document.createElement("div");
   actions.className = "row";
   actions.innerHTML = `
@@ -166,7 +179,7 @@ function renderPromptItem(item) {
     <button type="button" data-action="delete" data-id="${item.id}" class="danger">Delete</button>
   `;
 
-  wrapper.append(headerRow, block, tagsEl, actions);
+  wrapper.append(headerRow, block, tagsEl, auditEl, actions);
   return wrapper;
 }
 

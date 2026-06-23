@@ -9,6 +9,8 @@ function normalizeRow(row) {
     content: row.content,
     category: row.category,
     tags: row.tags || [],
+    lastEditor: row.last_editor,
+    sourceMachine: row.source_machine,
     createdAt: row.created_at,
     updatedAt: row.updated_at
   };
@@ -24,9 +26,21 @@ function createPromptRepository(pool) {
         content TEXT NOT NULL,
         category TEXT NOT NULL DEFAULT 'prompt',
         tags TEXT[] NOT NULL DEFAULT '{}',
+        last_editor TEXT,
+        source_machine TEXT,
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       );
+    `);
+
+    await pool.query(`
+      ALTER TABLE prompts
+      ADD COLUMN IF NOT EXISTS last_editor TEXT;
+    `);
+
+    await pool.query(`
+      ALTER TABLE prompts
+      ADD COLUMN IF NOT EXISTS source_machine TEXT;
     `);
 
     await pool.query(`
@@ -92,25 +106,41 @@ function createPromptRepository(pool) {
     return normalizeRow(result.rows[0]);
   }
 
-  async function create(ownerId, payload) {
+  async function create(ownerId, payload, audit = {}) {
     const result = await pool.query(
-      `INSERT INTO prompts (owner_id, title, content, category, tags)
-       VALUES ($1, $2, $3, $4, $5)
+      `INSERT INTO prompts (owner_id, title, content, category, tags, last_editor, source_machine)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
        RETURNING *`,
-      [ownerId, payload.title, payload.content, payload.category, payload.tags]
+      [
+        ownerId,
+        payload.title,
+        payload.content,
+        payload.category,
+        payload.tags,
+        audit.lastEditor || ownerId,
+        audit.sourceMachine || "unknown"
+      ]
     );
     return normalizeRow(result.rows[0]);
   }
 
-  async function importMany(ownerId, prompts) {
+  async function importMany(ownerId, prompts, audit = {}) {
     const client = await pool.connect();
     try {
       await client.query("BEGIN");
       for (const prompt of prompts) {
         await client.query(
-          `INSERT INTO prompts (owner_id, title, content, category, tags)
-           VALUES ($1, $2, $3, $4, $5)`,
-          [ownerId, prompt.title, prompt.content, prompt.category, prompt.tags]
+          `INSERT INTO prompts (owner_id, title, content, category, tags, last_editor, source_machine)
+           VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+          [
+            ownerId,
+            prompt.title,
+            prompt.content,
+            prompt.category,
+            prompt.tags,
+            audit.lastEditor || ownerId,
+            audit.sourceMachine || "unknown"
+          ]
         );
       }
       await client.query("COMMIT");
@@ -123,17 +153,28 @@ function createPromptRepository(pool) {
     }
   }
 
-  async function update(id, ownerId, payload) {
+  async function update(id, ownerId, payload, audit = {}) {
     const result = await pool.query(
       `UPDATE prompts
        SET title = $1,
            content = $2,
            category = $3,
            tags = $4,
+           last_editor = $5,
+           source_machine = $6,
            updated_at = NOW()
-       WHERE id = $5 AND owner_id = $6
+       WHERE id = $7 AND owner_id = $8
        RETURNING *`,
-      [payload.title, payload.content, payload.category, payload.tags, id, ownerId]
+      [
+        payload.title,
+        payload.content,
+        payload.category,
+        payload.tags,
+        audit.lastEditor || ownerId,
+        audit.sourceMachine || "unknown",
+        id,
+        ownerId
+      ]
     );
     return normalizeRow(result.rows[0]);
   }

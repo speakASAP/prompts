@@ -1,18 +1,19 @@
 # Tasks: prompts-microservice
 
 ## Backlog
-- [ ] Define the next bounded enhancement goal from the preserved backlog before new implementation work.
+- [x] Define the next bounded enhancement goal from the preserved backlog before new implementation work.
 - [ ] Add auth role policy if prompt sharing scope expands beyond owner-only.
 - [x] Add pagination for large prompt libraries.
-- [ ] Add audit fields for last editor and source machine.
+- [x] Add audit fields for last editor and source machine.
 - [x] Add optional export/import endpoint for backup.
 - [ ] Add seed categories management page.
 - [ ] Add rate limiting for auth and write endpoints.
 
 ## Active
-- None. Prompt duplication, pagination, and owner-only export/import are implemented; no additional bounded implementation lane is active in repo state.
+- None. Audit fields for last editor and source machine are implemented; no additional bounded implementation lane is active in repo state.
 
 ## Completed
+- [x] 2026-06-23 Added audit fields for last editor and source machine across prompt create, update, import, and list UI.
 - [x] 2026-06-22 Added owner-only prompt export/import for JSON backup and restore.
 - [x] 2026-06-21 Added capped owner-only prompt pagination with page controls.
 - [x] 2026-06-21 Added prompt duplication action in UI with live create-and-refresh behavior.

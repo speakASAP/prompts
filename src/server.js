@@ -96,6 +96,15 @@ function normalizePromptInput(body = {}) {
   return { title, content, category, tags };
 }
 
+function buildPromptAuditContext(req) {
+  const sourceMachineHeader = String(req.get("x-source-machine") || "").trim();
+  const userAgent = String(req.get("user-agent") || "").trim();
+  return {
+    lastEditor: req.user?.email || req.user?.id || "unknown",
+    sourceMachine: sourceMachineHeader || userAgent || "unknown"
+  };
+}
+
 function normalizeImportPayload(body = {}) {
   const promptsRaw = Array.isArray(body) ? body : body.prompts;
   if (!Array.isArray(promptsRaw)) {
@@ -286,7 +295,11 @@ app.post("/api/prompts/import", authGuard, async (req, res) => {
       return res.status(400).json({ message: "Import payload is too large (max 200 prompts)" });
     }
 
-    const importedCount = await promptRepository.importMany(req.user.id, prompts);
+    const importedCount = await promptRepository.importMany(
+      req.user.id,
+      prompts,
+      buildPromptAuditContext(req)
+    );
     return res.status(201).json({
       importedCount,
       skippedCount
@@ -321,7 +334,7 @@ app.post("/api/prompts", authGuard, async (req, res) => {
   }
 
   try {
-    const created = await promptRepository.create(req.user.id, payload);
+    const created = await promptRepository.create(req.user.id, payload, buildPromptAuditContext(req));
     return res.status(201).json(created);
   } catch (error) {
     logger.log("error", "create_prompt_failed", {
@@ -341,7 +354,12 @@ app.put("/api/prompts/:id", authGuard, async (req, res) => {
   }
 
   try {
-    const updated = await promptRepository.update(req.params.id, req.user.id, payload);
+    const updated = await promptRepository.update(
+      req.params.id,
+      req.user.id,
+      payload,
+      buildPromptAuditContext(req)
+    );
     if (!updated) {
       return res.status(404).json({ message: "Prompt not found" });
     }
