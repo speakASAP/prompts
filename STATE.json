@@ -8,8 +8,8 @@
   "tasks_active": 0,
   "tasks_failed_last_cycle": 0,
   "open_task_ids": [],
-  "last_milestone": "prompt-rate-limiting-deployed",
-  "next_focus": "Auth and write endpoint rate limiting is implemented. Future work requires selecting another bounded backlog goal such as auth-role policy if sharing expands.",
+  "last_milestone": "prompt-project-completed-frozen",
+  "next_focus": "No tasks left.",
   "blockers": [],
   "budget_units_used": 0,
   "metrics": {
@@ -21,15 +21,19 @@
       "validation": "npm_run_check_passed_deploy_rollout_and_http_health_passed",
       "auth_scope": "owner_only_prompt_crud",
       "deploy_script": "scripts/deploy.sh",
-      "backlog_status": "prompt_rate_limiting_implemented_no_active_bounded_lane",
+      "backlog_status": "project_completed_frozen_no_follow_up_lane",
       "duplicate_prompt_ui": "deployed_2026_06_21",
       "pagination": "implemented_2026_06_21",
       "export_import": "implemented_2026_06_22",
       "audit_fields": "implemented_2026_06_23",
       "category_management": "implemented_2026_06_24",
-      "rate_limiting": "implemented_2026_06_24"
+      "rate_limiting": "implemented_2026_06_24",
+      "auth_role_policy": "owner_closeout_marked_complete_2026_06_24",
+      "debt_status": "none_owner_closeout_2026_06_24"
     }
   },
   "updated_at": "2026-06-24",
-  "project_status": "active_ready_for_future_goal"
+  "project_status": "completed_frozen",
+  "completed_at": "2026-06-24",
+  "frozen_at": "2026-06-24"
 }
