@@ -4,12 +4,12 @@
   "stage": "production",
   "health": "ok",
   "cycle": 1,
-  "last_cycle_at": "2026-06-24T00:00:00Z",
+  "last_cycle_at": "2026-06-24T08:00:00Z",
   "tasks_active": 0,
   "tasks_failed_last_cycle": 0,
   "open_task_ids": [],
-  "last_milestone": "prompt-category-management-deployed",
-  "next_focus": "Seed categories management is implemented. Future work requires selecting another bounded backlog goal such as rate limiting or auth-role policy if sharing expands.",
+  "last_milestone": "prompt-rate-limiting-deployed",
+  "next_focus": "Auth and write endpoint rate limiting is implemented. Future work requires selecting another bounded backlog goal such as auth-role policy if sharing expands.",
   "blockers": [],
   "budget_units_used": 0,
   "metrics": {
@@ -21,12 +21,13 @@
       "validation": "npm_run_check_passed_deploy_rollout_and_http_health_passed",
       "auth_scope": "owner_only_prompt_crud",
       "deploy_script": "scripts/deploy.sh",
-      "backlog_status": "prompt_category_management_implemented_no_active_bounded_lane",
+      "backlog_status": "prompt_rate_limiting_implemented_no_active_bounded_lane",
       "duplicate_prompt_ui": "deployed_2026_06_21",
       "pagination": "implemented_2026_06_21",
       "export_import": "implemented_2026_06_22",
       "audit_fields": "implemented_2026_06_23",
-      "category_management": "implemented_2026_06_24"
+      "category_management": "implemented_2026_06_24",
+      "rate_limiting": "implemented_2026_06_24"
     }
   },
   "updated_at": "2026-06-24",

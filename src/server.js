@@ -23,6 +23,18 @@ const dbPool = new Pool({
 const logger = createLoggingClient(config.logging);
 const authClient = createAuthClient(config.auth, logger);
 const promptRepository = createPromptRepository(dbPool);
+const rateLimitBuckets = new Map();
+
+const RATE_LIMIT_POLICIES = {
+  auth: {
+    maxRequests: 10,
+    windowMs: 10 * 60 * 1000
+  },
+  write: {
+    maxRequests: 60,
+    windowMs: 5 * 60 * 1000
+  }
+};
 
 app.disable("x-powered-by");
 app.use(express.json({ limit: "1mb" }));
@@ -64,6 +76,83 @@ function extractTokenFromRequest(req) {
   }
   return req.cookies[config.auth.cookieName] || null;
 }
+
+function getRequestIp(req) {
+  const forwarded = String(req.headers["x-forwarded-for"] || "")
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean)[0];
+  return forwarded || req.ip || req.socket?.remoteAddress || "unknown";
+}
+
+function consumeRateLimit(policyKey, bucketKey) {
+  const policy = RATE_LIMIT_POLICIES[policyKey];
+  const now = Date.now();
+  const mapKey = `${policyKey}:${bucketKey}`;
+  const bucket = rateLimitBuckets.get(mapKey);
+
+  if (!bucket || bucket.expiresAt <= now) {
+    const freshBucket = {
+      count: 1,
+      expiresAt: now + policy.windowMs
+    };
+    rateLimitBuckets.set(mapKey, freshBucket);
+    return {
+      allowed: true,
+      remaining: Math.max(policy.maxRequests - freshBucket.count, 0),
+      retryAfterSec: Math.ceil(policy.windowMs / 1000)
+    };
+  }
+
+  if (bucket.count >= policy.maxRequests) {
+    return {
+      allowed: false,
+      remaining: 0,
+      retryAfterSec: Math.max(Math.ceil((bucket.expiresAt - now) / 1000), 1)
+    };
+  }
+
+  bucket.count += 1;
+  return {
+    allowed: true,
+    remaining: Math.max(policy.maxRequests - bucket.count, 0),
+    retryAfterSec: Math.max(Math.ceil((bucket.expiresAt - now) / 1000), 1)
+  };
+}
+
+function createRateLimitMiddleware(policyKey, keyBuilder) {
+  return function rateLimitMiddleware(req, res, next) {
+    const bucketKey = keyBuilder(req);
+    const outcome = consumeRateLimit(policyKey, bucketKey);
+    const policy = RATE_LIMIT_POLICIES[policyKey];
+
+    res.setHeader("X-RateLimit-Limit", String(policy.maxRequests));
+    res.setHeader("X-RateLimit-Remaining", String(outcome.remaining));
+    res.setHeader("X-RateLimit-Reset", String(outcome.retryAfterSec));
+
+    if (outcome.allowed) {
+      return next();
+    }
+
+    res.setHeader("Retry-After", String(outcome.retryAfterSec));
+    logger.log("warn", "rate_limit_exceeded", {
+      timestamp: new Date().toISOString(),
+      duration_ms: 0,
+      policy: policyKey,
+      path: req.path,
+      bucket_key: bucketKey
+    });
+    return res.status(429).json({
+      message: `Too many ${policyKey} requests. Retry in about ${outcome.retryAfterSec} seconds.`
+    });
+  };
+}
+
+const authRateLimit = createRateLimitMiddleware("auth", (req) => getRequestIp(req));
+const writeRateLimit = createRateLimitMiddleware(
+  "write",
+  (req) => req.user?.id || `${getRequestIp(req)}:${req.path}`
+);
 
 async function authGuard(req, res, next) {
   const token = extractTokenFromRequest(req);
@@ -166,7 +255,7 @@ async function handleHealth(_req, res) {
 app.get("/health", handleHealth);
 app.get("/api/health", handleHealth);
 
-app.post("/api/auth/login", async (req, res) => {
+app.post("/api/auth/login", authRateLimit, async (req, res) => {
   const started = Date.now();
   try {
     const result = await authClient.login(req.body);
@@ -194,7 +283,7 @@ app.post("/api/auth/login", async (req, res) => {
   }
 });
 
-app.post("/api/auth/register", async (req, res) => {
+app.post("/api/auth/register", authRateLimit, async (req, res) => {
   const started = Date.now();
   try {
     const result = await authClient.register(req.body);
@@ -222,7 +311,7 @@ app.post("/api/auth/register", async (req, res) => {
   }
 });
 
-app.post("/api/auth/logout", (_req, res) => {
+app.post("/api/auth/logout", authRateLimit, (_req, res) => {
   res.clearCookie(config.auth.cookieName);
   return res.json({ message: "Logged out" });
 });
@@ -278,7 +367,7 @@ app.get("/api/categories", authGuard, async (req, res) => {
   }
 });
 
-app.post("/api/categories", authGuard, async (req, res) => {
+app.post("/api/categories", authGuard, writeRateLimit, async (req, res) => {
   const started = Date.now();
   const payload = normalizeCategoryInput(req.body);
   if (!payload.name) {
@@ -298,7 +387,7 @@ app.post("/api/categories", authGuard, async (req, res) => {
   }
 });
 
-app.delete("/api/categories/:id", authGuard, async (req, res) => {
+app.delete("/api/categories/:id", authGuard, writeRateLimit, async (req, res) => {
   const started = Date.now();
   try {
     const deleted = await promptRepository.removeCategory(req.params.id, req.user.id);
@@ -344,7 +433,7 @@ app.get("/api/prompts/export", authGuard, async (req, res) => {
   }
 });
 
-app.post("/api/prompts/import", authGuard, async (req, res) => {
+app.post("/api/prompts/import", authGuard, writeRateLimit, async (req, res) => {
   const started = Date.now();
   try {
     const { prompts, skippedCount } = normalizeImportPayload(req.body);
@@ -386,7 +475,7 @@ app.get("/api/prompts/:id", authGuard, async (req, res) => {
   }
 });
 
-app.post("/api/prompts", authGuard, async (req, res) => {
+app.post("/api/prompts", authGuard, writeRateLimit, async (req, res) => {
   const started = Date.now();
   const payload = normalizePromptInput(req.body);
   if (!payload.title || !payload.content) {
@@ -406,7 +495,7 @@ app.post("/api/prompts", authGuard, async (req, res) => {
   }
 });
 
-app.put("/api/prompts/:id", authGuard, async (req, res) => {
+app.put("/api/prompts/:id", authGuard, writeRateLimit, async (req, res) => {
   const started = Date.now();
   const payload = normalizePromptInput(req.body);
   if (!payload.title || !payload.content) {
@@ -434,7 +523,7 @@ app.put("/api/prompts/:id", authGuard, async (req, res) => {
   }
 });
 
-app.delete("/api/prompts/:id", authGuard, async (req, res) => {
+app.delete("/api/prompts/:id", authGuard, writeRateLimit, async (req, res) => {
   const started = Date.now();
   try {
     const deleted = await promptRepository.remove(req.params.id, req.user.id);
