@@ -85,6 +85,42 @@ button.danger {
   gap: 8px;
 }
 
+.category-form {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.category-form input {
+  flex: 1;
+}
+
+.category-list {
+  display: grid;
+  gap: 10px;
+}
+
+.category-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid #e6eaf2;
+  border-radius: 8px;
+  background: #fbfcff;
+}
+
+.category-item-info {
+  display: grid;
+  gap: 4px;
+}
+
+.category-item-meta {
+  color: #6a748d;
+  font-size: 12px;
+}
+
 .list {
   display: grid;
   gap: 10px;
@@ -185,4 +221,20 @@ button.danger {
 
 .message.error {
   color: #c20f0f;
+}
+
+@media (max-width: 720px) {
+  .toolbar,
+  .row-space,
+  .category-form,
+  .category-item,
+  .filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .pagination-controls {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
 }

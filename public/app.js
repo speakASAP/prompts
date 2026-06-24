@@ -10,6 +10,9 @@ const promptList = document.getElementById("prompt-list");
 
 const searchInput = document.getElementById("search-input");
 const categoryFilter = document.getElementById("category-filter");
+const categoryForm = document.getElementById("category-form");
+const categoryNameInput = document.getElementById("category-name");
+const categoryList = document.getElementById("category-list");
 const paginationStatus = document.getElementById("pagination-status");
 const previousPageButton = document.getElementById("previous-page");
 const nextPageButton = document.getElementById("next-page");
@@ -19,6 +22,7 @@ const importPromptsFileInput = document.getElementById("import-prompts-file");
 
 let promptPage = 1;
 const promptPageSize = 10;
+let categories = [];
 
 const logoutButton = document.getElementById("logout-button");
 const cancelEditButton = document.getElementById("cancel-edit");
@@ -85,6 +89,9 @@ function setLoggedOut() {
   authSection.classList.remove("hidden");
   appSection.classList.add("hidden");
   promptList.innerHTML = "";
+  if (categoryList) {
+    categoryList.innerHTML = "";
+  }
 }
 
 function toFormData(form) {
@@ -97,6 +104,94 @@ function resetPromptForm() {
   promptForm.elements.id.value = "";
   promptForm.elements.category.value = "prompt";
   formTitle.textContent = "Create prompt";
+}
+
+function populateCategorySelect(select, items, options = {}) {
+  if (!select) {
+    return;
+  }
+
+  const previousValue = options.selectedValue ?? select.value;
+  select.innerHTML = "";
+
+  if (options.includeBlankOption) {
+    const blankOption = document.createElement("option");
+    blankOption.value = "";
+    blankOption.textContent = "all categories";
+    select.appendChild(blankOption);
+  }
+
+  items.forEach((item) => {
+    const option = document.createElement("option");
+    option.value = item.name;
+    option.textContent = item.name;
+    select.appendChild(option);
+  });
+
+  const fallbackValue = options.includeBlankOption ? "" : items[0]?.name || "prompt";
+  const availableValues = new Set(items.map((item) => item.name));
+  if (options.includeBlankOption || availableValues.has(previousValue)) {
+    select.value = previousValue || fallbackValue;
+  } else {
+    select.value = fallbackValue;
+  }
+}
+
+function renderCategoryItem(item) {
+  const wrapper = document.createElement("article");
+  wrapper.className = "category-item";
+
+  const info = document.createElement("div");
+  info.className = "category-item-info";
+
+  const name = document.createElement("strong");
+  name.textContent = item.name;
+
+  const meta = document.createElement("span");
+  meta.className = "category-item-meta";
+  meta.textContent = `${item.isSeed ? "Seed" : "Custom"} · ${item.usageCount} prompt${item.usageCount === 1 ? "" : "s"}`;
+
+  info.append(name, meta);
+
+  const actions = document.createElement("div");
+  actions.className = "row";
+  if (!item.isSeed) {
+    const removeButton = document.createElement("button");
+    removeButton.type = "button";
+    removeButton.className = item.usageCount > 0 ? "secondary" : "danger";
+    removeButton.dataset.action = "delete-category";
+    removeButton.dataset.id = String(item.id);
+    removeButton.disabled = item.usageCount > 0;
+    removeButton.textContent = item.usageCount > 0 ? "In use" : "Delete";
+    actions.appendChild(removeButton);
+  }
+
+  wrapper.append(info, actions);
+  return wrapper;
+}
+
+function renderCategories(items) {
+  if (!categoryList) {
+    return;
+  }
+
+  categoryList.innerHTML = "";
+  if (!items.length) {
+    categoryList.innerHTML = "<p>No categories available yet.</p>";
+    return;
+  }
+
+  items.forEach((item) => {
+    categoryList.appendChild(renderCategoryItem(item));
+  });
+}
+
+async function loadCategories() {
+  const payload = await api("/api/categories");
+  categories = Array.isArray(payload.items) ? payload.items : [];
+  populateCategorySelect(promptForm.elements.category, categories);
+  populateCategorySelect(categoryFilter, categories, { includeBlankOption: true });
+  renderCategories(categories);
 }
 
 function buildDuplicateTitle(title) {
@@ -209,6 +304,7 @@ async function ensureSession() {
   try {
     const response = await api("/api/auth/me");
     setAuthenticated(response.user);
+    await loadCategories();
     await loadPrompts();
   } catch (_error) {
     setLoggedOut();
@@ -307,6 +403,7 @@ importPromptsFileInput?.addEventListener("change", async (event) => {
       method: "POST",
       body: payload
     });
+    await loadCategories();
     resetPromptPage();
     await loadPrompts();
     showMessage(
@@ -345,9 +442,47 @@ promptForm.addEventListener("submit", async (event) => {
       await api("/api/prompts", { method: "POST", body: payload });
       showMessage("Prompt created.");
     }
+    await loadCategories();
     resetPromptForm();
     resetPromptPage();
     await loadPrompts();
+  } catch (error) {
+    showMessage(error.message, true);
+  }
+});
+
+categoryForm?.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const categoryName = String(categoryNameInput?.value || "").trim();
+  try {
+    await api("/api/categories", {
+      method: "POST",
+      body: { name: categoryName }
+    });
+    await loadCategories();
+    if (categoryNameInput) {
+      categoryNameInput.value = "";
+    }
+    showMessage(`Added category "${categoryName.toLowerCase()}".`);
+  } catch (error) {
+    showMessage(error.message, true);
+  }
+});
+
+categoryList?.addEventListener("click", async (event) => {
+  const target = event.target;
+  if (!(target instanceof HTMLButtonElement)) {
+    return;
+  }
+
+  if (target.dataset.action !== "delete-category" || !target.dataset.id) {
+    return;
+  }
+
+  try {
+    await api(`/api/categories/${target.dataset.id}`, { method: "DELETE" });
+    await loadCategories();
+    showMessage("Category deleted.");
   } catch (error) {
     showMessage(error.message, true);
   }
@@ -368,6 +503,7 @@ promptList.addEventListener("click", async (event) => {
   if (action === "delete") {
     try {
       await api(`/api/prompts/${id}`, { method: "DELETE" });
+      await loadCategories();
       showMessage("Prompt deleted.");
       await loadPrompts();
     } catch (error) {
@@ -385,6 +521,7 @@ promptList.addEventListener("click", async (event) => {
         method: "POST",
         body: buildDuplicatePayload(prompt)
       });
+      await loadCategories();
       showMessage(`Duplicated "${sourceTitle}".`);
       resetPromptPage();
       await loadPrompts();

@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Prompts Microservice</title>
-    <link rel="stylesheet" href="/styles.css?v=3" />
+    <link rel="stylesheet" href="/styles.css?v=4" />
   </head>
   <body>
     <main class="container">
@@ -76,6 +76,20 @@
 
         <section class="card">
           <div class="row row-space">
+            <div>
+              <h2>Category library</h2>
+              <p>Manage the seed categories available in the prompt form and filters.</p>
+            </div>
+          </div>
+          <form id="category-form" class="category-form">
+            <input id="category-name" type="text" name="name" placeholder="Add custom category" required />
+            <button type="submit">Add category</button>
+          </form>
+          <div id="category-list" class="category-list"></div>
+        </section>
+
+        <section class="card">
+          <div class="row row-space">
             <h2>Stored prompts</h2>
             <div class="filters">
               <input id="search-input" type="text" placeholder="Search title or content" />
@@ -101,6 +115,6 @@
       <p id="message" class="message"></p>
     </main>
 
-    <script src="/app.js?v=4"></script>
+    <script src="/app.js?v=5"></script>
   </body>
 </html>

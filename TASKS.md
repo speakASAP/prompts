@@ -6,13 +6,14 @@
 - [x] Add pagination for large prompt libraries.
 - [x] Add audit fields for last editor and source machine.
 - [x] Add optional export/import endpoint for backup.
-- [ ] Add seed categories management page.
+- [x] Add seed categories management page.
 - [ ] Add rate limiting for auth and write endpoints.
 
 ## Active
-- None. Audit fields for last editor and source machine are implemented; no additional bounded implementation lane is active in repo state.
+- None. Seed categories management is implemented; no additional bounded implementation lane is active in repo state.
 
 ## Completed
+- [x] 2026-06-24 Added seed categories management page with owner-scoped category library and dynamic prompt/category filters.
 - [x] 2026-06-23 Added audit fields for last editor and source machine across prompt create, update, import, and list UI.
 - [x] 2026-06-22 Added owner-only prompt export/import for JSON backup and restore.
 - [x] 2026-06-21 Added capped owner-only prompt pagination with page controls.

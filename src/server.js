@@ -96,6 +96,11 @@ function normalizePromptInput(body = {}) {
   return { title, content, category, tags };
 }
 
+function normalizeCategoryInput(body = {}) {
+  const name = String(body.name || "").trim().toLowerCase();
+  return { name };
+}
+
 function buildPromptAuditContext(req) {
   const sourceMachineHeader = String(req.get("x-source-machine") || "").trim();
   const userAgent = String(req.get("user-agent") || "").trim();
@@ -255,6 +260,61 @@ app.get("/api/prompts", authGuard, async (req, res) => {
       error: error.message
     });
     return res.status(500).json({ message: "Failed to load prompts" });
+  }
+});
+
+app.get("/api/categories", authGuard, async (req, res) => {
+  const started = Date.now();
+  try {
+    const categories = await promptRepository.listCategories(req.user.id);
+    return res.json({ items: categories });
+  } catch (error) {
+    logger.log("error", "list_categories_failed", {
+      timestamp: new Date().toISOString(),
+      duration_ms: Date.now() - started,
+      error: error.message
+    });
+    return res.status(500).json({ message: "Failed to load categories" });
+  }
+});
+
+app.post("/api/categories", authGuard, async (req, res) => {
+  const started = Date.now();
+  const payload = normalizeCategoryInput(req.body);
+  if (!payload.name) {
+    return res.status(400).json({ message: "Category name is required" });
+  }
+
+  try {
+    const category = await promptRepository.createCategory(req.user.id, payload.name);
+    return res.status(201).json(category);
+  } catch (error) {
+    logger.log("error", "create_category_failed", {
+      timestamp: new Date().toISOString(),
+      duration_ms: Date.now() - started,
+      error: error.message
+    });
+    return res.status(500).json({ message: "Failed to create category" });
+  }
+});
+
+app.delete("/api/categories/:id", authGuard, async (req, res) => {
+  const started = Date.now();
+  try {
+    const deleted = await promptRepository.removeCategory(req.params.id, req.user.id);
+    if (!deleted) {
+      return res.status(409).json({
+        message: "Only unused custom categories can be deleted"
+      });
+    }
+    return res.status(204).send();
+  } catch (error) {
+    logger.log("error", "delete_category_failed", {
+      timestamp: new Date().toISOString(),
+      duration_ms: Date.now() - started,
+      error: error.message
+    });
+    return res.status(500).json({ message: "Failed to delete category" });
   }
 });
 
