@@ -13,7 +13,7 @@ data:
   PORT: "4750"
   DB_HOST: "db-server-postgres.statex-apps.svc.cluster.local"
   DB_PORT: "5432"
-  DB_USER: "dbadmin"
+  DB_USER: "prompts_microservice"
   DB_NAME: "prompts_microservice"
   DB_SYNC: "false"
   DB_AUTO_CREATE: "true"
