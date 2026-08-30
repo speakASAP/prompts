@@ -1,0 +1,153 @@
+{
+  "schemaVersion": 1,
+  "profile": "runtime-service",
+  "project": {
+    "name": "prompts-microservice",
+    "repository": "https://github.com/speakASAP/prompts-microservice.git"
+  },
+  "standard": {
+    "repository": "https://github.com/speakASAP/intent-preservation-system",
+    "revision": "3e36f64c11e31b878fd2fe09267426738b25ae7f"
+  },
+  "artifacts": {
+    "readme": "README.md",
+    "business": "BUSINESS.md",
+    "system": "SYSTEM.md",
+    "agents": "AGENTS.md",
+    "operations": "AGENT_OPERATIONS.md",
+    "claude": "CLAUDE.md",
+    "tasks": "TASKS.md",
+    "state": "STATE.json",
+    "constitution": "docs/00_constitution/CONSTITUTION.md",
+    "vision": "docs/01_vision/VISION.md",
+    "integrationContract": "docs/06_architecture/INTEGRATION_CONTRACT.md",
+    "projectInvariants": "docs/17_governance/PROJECT_INVARIANTS.md",
+    "validationDebt": "docs/orchestrator/VALIDATION_DEBT.md",
+    "bootstrapTask": "docs/11_tasks/TASK-001-bootstrap-service.md",
+    "bootstrapGoalImpact": "docs/22_goal_impact/GOAL-IMPACT-TASK-001.md",
+    "bootstrapExecutionPlan": "docs/21_execution_plans/EP-TASK-001-bootstrap-service.md",
+    "bootstrapValidation": "docs/12_validation/VAL-TASK-001-bootstrap-service.md"
+  },
+  "integrationReview": [
+    {
+      "capability": "auth",
+      "component": "auth-microservice",
+      "decision": "required",
+      "reason": ".env.example documents AUTH_SERVICE_URL and AUTH_COOKIE_NAME/JWT_TOKEN, and STATE.json records an owner-only prompt CRUD auth scope backed by src/auth.js.",
+      "contract": "Owner-only authenticated session/JWT validation for all prompt/category endpoints",
+      "configuration": "AUTH_SERVICE_URL, AUTH_COOKIE_NAME, JWT_TOKEN",
+      "failureMode": "Auth outage blocks all prompt/category access since every endpoint requires owner authentication.",
+      "validation": "src/auth.js authentication path smoke checks."
+    },
+    {
+      "capability": "postgres",
+      "component": "database-server (db-server-postgres)",
+      "decision": "required",
+      "reason": ".env.example documents DB_HOST/DB_PORT/DB_USER/DB_PASSWORD/DB_NAME (prompts_microservice), used via the `pg` dependency and src/prompt-repository.js.",
+      "contract": "Relational storage for prompts, categories, and audit fields",
+      "configuration": "DB_HOST/DB_PORT/DB_USER/DB_PASSWORD/DB_NAME via database-server:5432",
+      "failureMode": "A database outage blocks all prompt/category reads and writes.",
+      "validation": "Database connectivity checks via src/prompt-repository.js."
+    },
+    {
+      "capability": "redis",
+      "component": "database-server (db-server-redis)",
+      "decision": "not-applicable",
+      "reason": "No Redis environment variable or dependency exists in .env.example or package.json; rate limiting is implemented in-memory per STATE.json."
+    },
+    {
+      "capability": "logging",
+      "component": "logging-microservice",
+      "decision": "required",
+      "reason": ".env.example documents LOGGING_SERVICE_URL, LOGGING_SERVICE_API_PATH, and LOGGING_ENABLED, used via src/logging.js.",
+      "contract": "Structured log delivery for prompt/category operations",
+      "configuration": "LOGGING_SERVICE_URL, LOGGING_SERVICE_API_PATH, LOGGING_ENABLED",
+      "failureMode": "Logging outage degrades observability without blocking prompt storage.",
+      "validation": "src/logging.js log-delivery checks when LOGGING_ENABLED=true."
+    },
+    {
+      "capability": "notifications",
+      "component": "notifications-microservice",
+      "decision": "not-applicable",
+      "reason": "No notifications integration exists in this repository's env vars, dependencies, or source files."
+    },
+    {
+      "capability": "ai",
+      "component": "ai-microservice",
+      "decision": "not-applicable",
+      "reason": "prompts-microservice only stores and serves prompt content; it does not call ai-microservice for execution/generation, and no such integration exists in .env.example or package.json."
+    },
+    {
+      "capability": "payments",
+      "component": "payments-microservice",
+      "decision": "not-applicable",
+      "reason": "No payment processing exists in this service."
+    },
+    {
+      "capability": "catalog",
+      "component": "catalog-microservice",
+      "decision": "not-applicable",
+      "reason": "No catalog/product-domain integration exists in this repository."
+    },
+    {
+      "capability": "orders",
+      "component": "orders-microservice",
+      "decision": "not-applicable",
+      "reason": "No orders-domain integration exists in this repository."
+    },
+    {
+      "capability": "warehouse",
+      "component": "warehouse-microservice",
+      "decision": "not-applicable",
+      "reason": "No warehouse/inventory integration exists in this repository."
+    },
+    {
+      "capability": "invoices",
+      "component": "invoices-microservice",
+      "decision": "not-applicable",
+      "reason": "No invoicing integration exists in this repository."
+    },
+    {
+      "capability": "object-storage",
+      "component": "minio-microservice",
+      "decision": "not-applicable",
+      "reason": "Export/import is implemented as JSON backup/restore via the prompt API itself (STATE.json export_import metric), with no object-storage dependency in .env.example or package.json."
+    },
+    {
+      "capability": "event-bus",
+      "component": "RabbitMQ",
+      "decision": "not-applicable",
+      "reason": "No message-broker environment variable or dependency exists in .env.example or package.json."
+    },
+    {
+      "capability": "docs-rag",
+      "component": "docs-rag-microservice",
+      "decision": "required",
+      "reason": "This service is a documentation-onboarded ecosystem repository and should be discoverable via docs-rag-microservice, consistent with other onboarded services.",
+      "contract": "Direct Git repository ingestion and repository-scoped retrieval",
+      "configuration": "Tracked in the canonical repository registry and docs-RAG index",
+      "failureMode": "When docs-RAG is unavailable, Git remains authoritative.",
+      "validation": "Repository documents resolve to the owning repository path and remain discoverable."
+    },
+    {
+      "capability": "monitoring",
+      "component": "monitoring-microservice",
+      "decision": "required",
+      "reason": "STATE.json records a validated GET /health and Kubernetes deployment-availability check, consistent with the ecosystem's shared monitoring model.",
+      "contract": "GET /health and Kubernetes readiness/liveness checks for rollout control",
+      "configuration": "Deployment probes and health endpoint in k8s manifests",
+      "failureMode": "An unhealthy service is prevented from passing rollout readiness and is reported to the owner.",
+      "validation": "The monitoring stack confirms health, readiness, and service availability."
+    },
+    {
+      "capability": "backups",
+      "component": "backups-microservice",
+      "decision": "required",
+      "reason": "This service's PostgreSQL database holds production prompt/category data and requires backup coverage consistent with other ecosystem databases, in addition to its own owner-only export/import feature.",
+      "contract": "Scheduled/manual PostgreSQL backups for the prompts_microservice database",
+      "configuration": "backup-db.sh or equivalent invoked against the prompts_microservice database",
+      "failureMode": "Missed backups increase data-loss risk on failure beyond what owner-initiated export/import covers.",
+      "validation": "Backup script execution and restore-drill evidence."
+    }
+  ]
+}

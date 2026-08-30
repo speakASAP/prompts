@@ -1,39 +1,18 @@
 {
-  "v": 1,
+  "schemaVersion": 1,
   "project": "prompts-microservice",
-  "stage": "production",
-  "health": "ok",
-  "cycle": 1,
-  "last_cycle_at": "2026-06-24T08:00:00Z",
-  "tasks_active": 0,
-  "tasks_failed_last_cycle": 0,
-  "open_task_ids": [],
-  "last_milestone": "prompt-project-completed-frozen",
-  "next_focus": "No tasks left.",
-  "blockers": [],
-  "budget_units_used": 0,
-  "metrics": {
-    "custom": {
-      "ui_domain": "https://prompts.alfares.cz/",
-      "api_health": "https_200_ok_2026_06_21",
-      "root_ui": "https_200_ok_2026_06_21",
-      "k8s_deployment": "available_1_of_1_2026_06_21",
-      "validation": "npm_run_check_passed_deploy_rollout_and_http_health_passed",
-      "auth_scope": "owner_only_prompt_crud",
-      "deploy_script": "scripts/deploy.sh",
-      "backlog_status": "project_completed_frozen_no_follow_up_lane",
-      "duplicate_prompt_ui": "deployed_2026_06_21",
-      "pagination": "implemented_2026_06_21",
-      "export_import": "implemented_2026_06_22",
-      "audit_fields": "implemented_2026_06_23",
-      "category_management": "implemented_2026_06_24",
-      "rate_limiting": "implemented_2026_06_24",
-      "auth_role_policy": "owner_closeout_marked_complete_2026_06_24",
-      "debt_status": "none_owner_closeout_2026_06_24"
-    }
+  "lifecycle": "frozen",
+  "health": "healthy",
+  "activeTask": "None; project completed/frozen by owner closeout 2026-06-24",
+  "lastUpdated": "2026-08-30",
+  "deployment": {
+    "status": "commit-triggered-auto-queue",
+    "image": null,
+    "revision": null
   },
-  "updated_at": "2026-06-24",
-  "project_status": "completed_frozen",
-  "completed_at": "2026-06-24",
-  "frozen_at": "2026-06-24"
+  "blockers": [],
+  "followUps": [
+    "IPS adoption profile completed 2026-08-30; run the planning validator before any future scope change",
+    "Do not dispatch new implementation work unless the owner explicitly reopens the service"
+  ]
 }
