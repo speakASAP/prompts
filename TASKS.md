@@ -2,16 +2,13 @@
 
 This file is the concise human-readable work queue. Detailed task contracts live under `docs/11_tasks/` and execution records remain linked there.
 
-## active
-
+## Active
 - None. Project is completed/frozen; no additional bounded implementation lane is active in repo state (TASKS.md).
 
-## ready next
-
+## Ready Next
 - None; do not propose or dispatch new work unless the owner explicitly reopens the service (TASKS.md Project Completion Marker).
 
-## blocked
-
+## Blocked
 - None; there are no open tasks, blockers, or debt items as of the 2026-06-24 owner closeout.
 
 ## completed
