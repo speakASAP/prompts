@@ -1,19 +1,28 @@
-# Tasks: Prompts Microservice
 
 This file is the concise human-readable work queue. Detailed task contracts live under `docs/11_tasks/` and execution records remain linked there.
 
+
+# Tasks: Prompts Microservice
+
 ## Active
+
 - None. Project is completed/frozen; no additional bounded implementation lane is active in repo state (TASKS.md).
 
-## Ready Next
+
+## Ready next
+
 - None; do not propose or dispatch new work unless the owner explicitly reopens the service (TASKS.md Project Completion Marker).
 - IPS adoption profile completed 2026-08-30; run the planning validator before any future scope change
 - Do not dispatch new implementation work unless the owner explicitly reopens the service
 
+
 ## Blocked
+
 - None; there are no open tasks, blockers, or debt items as of the 2026-06-24 owner closeout.
 
-## completed
+
+## Completed
+
 
 - 2026-06-24 Owner closeout override: marked remaining prompt backlog complete
 - 2026-06-24 Added in-memory rate limiting for auth and mutating endpoints
@@ -24,6 +33,8 @@ This file is the concise human-readable work queue. Detailed task contracts live
 - 2026-06-21 Added explicit /health runtime endpoint matching Kubernetes probes
 - 2026-06-21 Validated runtime health via npm run check and live Kubernetes deployment
 
-## handoff
+
+## Handoff
+
 
 Current machine-readable state: [`STATE.json`](STATE.json). Project is completed/frozen since 2026-06-24; see TASKS.md's Project Completion Marker before proposing any new work.
