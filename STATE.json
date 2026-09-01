@@ -1,20 +1,4 @@
 {
-  "schemaVersion": 1,
-  "project": "prompts-microservice",
-  "lifecycle": "frozen",
-  "health": "healthy",
-  "activeTask": "None; project completed/frozen by owner closeout 2026-06-24",
-  "lastUpdated": "2026-08-30",
-  "deployment": {
-    "status": "commit-triggered-auto-queue",
-    "image": null,
-    "revision": null
-  },
-  "blockers": [],
-  "followUps": [
-    "IPS adoption profile completed 2026-08-30; run the planning validator before any future scope change",
-    "Do not dispatch new implementation work unless the owner explicitly reopens the service"
-  ],
   "schema_version": "1.0",
   "repository": "prompts-microservice",
   "service": {

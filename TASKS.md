@@ -7,6 +7,8 @@ This file is the concise human-readable work queue. Detailed task contracts live
 
 ## Ready Next
 - None; do not propose or dispatch new work unless the owner explicitly reopens the service (TASKS.md Project Completion Marker).
+- IPS adoption profile completed 2026-08-30; run the planning validator before any future scope change
+- Do not dispatch new implementation work unless the owner explicitly reopens the service
 
 ## Blocked
 - None; there are no open tasks, blockers, or debt items as of the 2026-06-24 owner closeout.
