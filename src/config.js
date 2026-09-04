@@ -39,6 +39,9 @@ function loadConfig() {
     logging: {
       serviceUrl: requireEnv("LOGGING_SERVICE_URL", "http://logging-microservice:3367"),
       apiPath: process.env.LOGGING_SERVICE_API_PATH || "/api/logs",
+      // The ingest endpoint rejects unauthenticated posts with 401. The token is
+      // already mounted in the pod; it was simply never read or sent.
+      token: process.env.LOGGING_SERVICE_TOKEN,
       enabled: (process.env.LOGGING_ENABLED || "true").toLowerCase() === "true"
     }
   };
