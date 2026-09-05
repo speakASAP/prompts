@@ -1,8 +1,27 @@
 {
   "schema_version": "1.0",
   "repository": "prompts-microservice",
-  "generated_at": "2026-08-31T18:25:00Z",
-  "artifacts": [],
+  "generated_at": "2026-09-05T18:09:33Z",
+  "artifacts": [
+    {
+      "id": "DECISION-PROMPTS-COMPLETION",
+      "type": "decision",
+      "status": "done",
+      "title": "Owner closeout override: marked remaining prompt backlog complete and frozen",
+      "path": "TASKS.md",
+      "parent_ids": [],
+      "updated_at": "2026-06-24T00:00:00Z"
+    },
+    {
+      "id": "TASK-PROMPTS-001",
+      "type": "task",
+      "status": "done",
+      "title": "TASK-001-bootstrap-service \u2014 IPS adoption bootstrap",
+      "path": "TASKS.md",
+      "parent_ids": [],
+      "updated_at": "2026-08-30T00:00:00Z"
+    }
+  ],
   "warnings": [
     "MISSING_RUNLAYER_PROJECT_MAPPING: RunLayer mapping is not yet verified for prompts-microservice."
   ]
